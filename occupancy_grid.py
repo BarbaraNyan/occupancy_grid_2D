@@ -12,7 +12,6 @@ CELL_FREE = 0.01
 CELL_UNKNOWN = 0.45
 
 BASE_LINK_FRAME = 'base_link'
-MAP_FRAME = 'map'
 MAP_RESOLUTION = 0.1
 MAP_SIZE_X = 20.0
 MAP_SIZE_Y = 20.0
@@ -24,7 +23,6 @@ MAP_COLS = int(MAP_SIZE_X/MAP_RESOLUTION)
 
 class OccGrid:
     def __init__(self):
-		
         rospy.init_node("OccupancyGrid")
 
         self.msg = OccupancyGrid()
@@ -58,7 +56,6 @@ class OccGrid:
     def create_grid(self, data):
         angle_min = data.angle_min
         angle_inc = data.angle_increment
-	stamp = data.header.stamp
 
         for idx, value in enumerate(data.ranges):
             theta = angle_min + idx * angle_inc
@@ -71,8 +68,7 @@ class OccGrid:
             self.grid[int(ip), int(jp)] += self.log(CELL_OCC) - self.log(CELL_UNKNOWN)
 
         occ_grid = self.grid.flatten()
-        self.publish_grid(occ_grid, stamp)
-
+        self.publish_grid(occ_grid)
 
     def bresenham(self, x0, y0, x1, y1, d):
         dx = abs(y1 - y0)
@@ -101,11 +97,10 @@ class OccGrid:
                 err += dx
                 ip += sy
 
-    def publish_grid(self, occ_grid, stamp):
+    def publish_grid(self, occ_grid):
         probability_map = (self.prob(occ_grid) * 100).astype(dtype=np.int8)
         
         self.msg.data = probability_map
-	self.msg.header.stamp = stamp
         self.pub.publish(self.msg)
 	rospy.loginfo("!")
 	#to do it once
